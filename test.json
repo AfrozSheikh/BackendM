@@ -1,0 +1,128 @@
+{
+    "name": "YC Page → Founder Extract + Email Guess (Gemini Flash)",
+    "nodes": [
+      {
+        "id": "manual-trigger",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [200, 200],
+        "parameters": {}
+      },
+      {
+        "id": "config",
+        "name": "Config: URL + Domain",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [400, 200],
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "startup-url",
+                "name": "companyPageUrl",
+                "type": "string",
+                "value": "https://www.ycombinator.com/companies/clever"
+              },
+              {
+                "id": "startup-domain",
+                "name": "companyDomain",
+                "type": "string",
+                "value": "clever.com"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-html",
+        "name": "Fetch Page HTML",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [620, 200],
+        "parameters": {
+          "method": "GET",
+          "url": "={{$json[\"companyPageUrl\"]}}",
+          "responseFormat": "string"
+        }
+      },
+      {
+        "id": "build-prompt",
+        "name": "Build Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [840, 200],
+        "parameters": {
+          "jsCode": "const html = $input.first().json;\nconst domain = $json.companyDomain;\n\nconst prompt = `Extract founders from this HTML page and predict emails.\n\n### Steps:\n1. Parse the HTML.\n2. Identify founders or executive leadership names.\n3. Infer the likely email format using domain: ${domain}\n4. Then generate guessed emails.\n\n### Output JSON ONLY in this format:\n{\n  \"domain\": \"${domain}\",\n  \"pattern\": \"first.last@domain.com\",\n  \"people\": [\n    { \"name\": \"Full Name\", \"guessed_email\": \"email@domain.com\" }\n  ]\n}\n\n### Raw HTML:\n\"\"\"\n${html}\n\"\"\"\n`;\n\nreturn [{ json: { prompt } }];"
+        }
+      },
+      {
+        "id": "gemini",
+        "name": "Gemini Flash (LLM)",
+        "type": "n8n-nodes-base.googleGemini",
+        "typeVersion": 1,
+        "position": [1080, 200],
+        "parameters": {
+          "model": "gemini-1.5-flash",
+          "prompt": "={{$json[\"prompt\"]}}",
+          "maxTokens": 800,
+          "temperature": 0.2
+        },
+        "credentials": {
+          "googlePalmApi": {
+            "id": "REPLACE_WITH_YOUR_API_KEY_ID",
+            "name": "AIzaSyDn9TkF1GmqNkrTJ6KmrhjXNBWPmCNeUnE"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Config: URL + Domain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Config: URL + Domain": {
+        "main": [
+          [
+            {
+              "node": "Fetch Page HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Page HTML": {
+        "main": [
+          [
+            {
+              "node": "Build Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Prompt": {
+        "main": [
+          [
+            {
+              "node": "Gemini Flash (LLM)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {}
+  }
+  

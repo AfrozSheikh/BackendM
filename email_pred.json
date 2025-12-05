@@ -1,0 +1,138 @@
+{
+  "name": "YC Page → Founder Extract + Email Guess (Gemini Flash)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1e4f4390-1c50-4f5d-b87e-2ac908f7dd73",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "startup-url",
+              "name": "companyPageUrl",
+              "type": "string",
+              "value": "https://www.ycombinator.com/companies/clever"
+            },
+            {
+              "id": "startup-domain",
+              "name": "companyDomain",
+              "type": "string",
+              "value": "clever.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd20503f-a63b-47c6-a7fa-fb4eb73cada8",
+      "name": "Config: URL + Domain",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"companyPageUrl\"]}}",
+        "options": {}
+      },
+      "id": "eb684b69-d6c0-4b21-b10b-4c4099673a57",
+      "name": "Fetch Page HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        288,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.data }} you are an expert in email guessing so from this total html guess the email of the founders maybe one or more with domain of this company means founder@companydomain.com and in output give only company name and founder name with founder email "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        528,
+        112
+      ],
+      "id": "9405433a-4c03-4e86-855b-1b2d87af3fc5",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CAUXQIVsJmXN6KHh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config: URL + Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config: URL + Domain": {
+      "main": [
+        [
+          {
+            "node": "Fetch Page HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Page HTML": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12bc6ec9-2c10-4b62-8b0c-c4f04fbbae1e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8079cbbba01204783a2e550229d0e534ef73b429df657b412ba042e1a46a95af"
+  },
+  "id": "Abvsb5QOdKKN9sZg",
+  "tags": []
+}
